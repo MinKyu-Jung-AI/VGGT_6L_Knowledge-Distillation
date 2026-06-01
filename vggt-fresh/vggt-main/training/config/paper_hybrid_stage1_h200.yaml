@@ -1,0 +1,113 @@
+defaults:
+  - default
+  - _self_
+
+# Stage 1: Mamba2 2개만 삽입 (최초 안정화 단계)
+# 수렴 확인 후 stage2로 이행
+exp_name: paper_hybrid_stage1_h200
+num_workers: 8
+max_img_per_gpu: 96
+limit_train_batches: 50000
+limit_val_batches: 200
+val_epoch_freq: 99999
+max_epochs: 10
+
+data:
+  train:
+    _target_: data.dynamic_dataloader.DynamicTorchDataset
+    num_workers: ${num_workers}
+    max_img_per_gpu: ${max_img_per_gpu}
+    common_config:
+      img_size: ${img_size}
+      patch_size: ${patch_size}
+      fix_img_num: 8
+      img_nums: [8, 8]
+      max_img_per_gpu: ${max_img_per_gpu}
+      debug: False
+      repeat_batch: False
+    dataset:
+      _target_: data.composed_dataset.ComposedDataset
+      dataset_configs:
+        - _target_: data.datasets.co3d.Co3dDataset
+          split: train
+          CO3D_DIR: /data/vggt_kimi_files/VGGT-Dataset
+          CO3D_ANNOTATION_DIR: /root/co3d_annotations
+          min_num_images: 8
+          len_train: 200000
+        - _target_: data.datasets.co3d.Co3dDataset
+          split: train
+          CO3D_DIR: /data/vggt_kimi_files/VGGT-Dataset/DL3DV-10K
+          CO3D_ANNOTATION_DIR: /root/co3d_annotations
+          min_num_images: 8
+          len_train: 100000
+  val:
+    _target_: data.dynamic_dataloader.DynamicTorchDataset
+    num_workers: ${num_workers}
+    max_img_per_gpu: 48
+    common_config:
+      img_size: ${img_size}
+      patch_size: ${patch_size}
+      fix_img_num: 8
+      img_nums: [8, 8]
+      max_img_per_gpu: 48
+      debug: False
+    dataset:
+      _target_: data.composed_dataset.ComposedDataset
+      dataset_configs:
+        - _target_: data.datasets.co3d.Co3dDataset
+          split: test
+          CO3D_DIR: /data/vggt_kimi_files/VGGT-Dataset
+          CO3D_ANNOTATION_DIR: /root/co3d_annotations
+          min_num_images: 8
+          len_test: 10000
+
+checkpoint:
+  save_dir: /root/vggt_hybrid_stage1_checkpoints
+  resume_checkpoint_path: null
+  save_freq: 1
+  save_freq_steps: 5000
+  strict: false
+
+logging:
+  log_dir: /root/vggt_hybrid_stage1_logs
+  log_freq: 10
+
+model:
+  _target_: vggt.models.vggt.VGGT
+  img_size: 518
+  patch_size: 14
+  embed_dim: 1024
+  halo_ratio: 0
+  keep_global_attn_indices: null
+  # Mamba2 2개: 앞(3)과 중간 앞(9) — 간격 벌려서 상호 간섭 최소화
+  replace_global_with_mamba2_indices: [3, 9]
+  mamba2_d_state: 16
+  mamba2_d_conv: 4
+  mamba2_expand: 2
+  mamba_mlp_ratio: 2.0
+  enable_camera: true
+  enable_depth: true
+  enable_point: false
+  enable_track: false
+
+optim:
+  frozen_module_names: []
+  optimizer:
+    _target_: torch.optim.AdamW
+    lr: 5e-5
+    weight_decay: 0.05
+  amp:
+    enabled: True
+    amp_dtype: bfloat16
+  gradient_clip:
+    _target_: train_utils.gradient_clip.GradientClipper
+    configs:
+      - module_name: ["aggregator"]
+        max_norm: 0.5   # stage1: optimization shock 방지용 tighter clip
+        norm_type: 2
+      - module_name: ["depth"]
+        max_norm: 0.5
+        norm_type: 2
+      - module_name: ["camera"]
+        max_norm: 0.5
+        norm_type: 2
