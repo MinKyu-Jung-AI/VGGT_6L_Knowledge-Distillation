@@ -1,4 +1,4 @@
-# 6L HALO — Final (AUC@5 = 0.641)
+# VGGT_6L_Knowledge Distillation
 
 VGGT의 24개 전역 셀프 어텐션(Global Self-Attention) 레이어 중 6개를 Gated Linear Attention(Lightning)으로 치환하여 연산 비용을 감소시킨 최종 성공 구성입니다. 원본 VGGT 대비 성능 저하를 최소화하면서 1.25배의 추론 가속을 달성했습니다.
 
