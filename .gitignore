@@ -1,0 +1,10 @@
+stage1_layerwise/
+stage2_fmse/
+stage3_task/
+weights/
+vggt-fresh.zip
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python

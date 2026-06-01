@@ -1,0 +1,8 @@
+{
+  "layers": {
+    "0": {"recall_drop": 0.10, "csr_drop": 0.02},
+    "1": {"recall_drop": 0.05, "csr_drop": 0.01},
+    "2": {"recall_drop": 0.12, "csr_drop": 0.03},
+    "3": {"recall_drop": 0.08, "csr_drop": 0.02}
+  }
+}
