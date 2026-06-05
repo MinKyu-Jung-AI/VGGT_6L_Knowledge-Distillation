@@ -1,6 +1,6 @@
 """
 6L: L9 patch token 집중 학습
-Feature MSE + Task Loss + L9 patch token 가중 loss
+Feature MSE + Task Loss + L9 patch token weighted loss
 """
 import torch, sys, os, time, logging, random
 import numpy as np
