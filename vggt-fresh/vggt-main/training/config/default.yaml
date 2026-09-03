@@ -30,8 +30,8 @@ data:
       dataset_configs:
         - _target_: data.datasets.co3d.Co3dDataset
           split: train
-          CO3D_DIR: /data/vggt_kimi_files/VGGT-Dataset
-          CO3D_ANNOTATION_DIR: /root/co3d_annotations
+          CO3D_DIR: ${oc.env:VGGT_CO3D_DIR,./data}
+          CO3D_ANNOTATION_DIR: ${oc.env:VGGT_CO3D_ANNOTATION_DIR,./data/co3d_annotations}
   val:
     _target_: data.dynamic_dataloader.DynamicTorchDataset
     num_workers: ${num_workers}
@@ -45,8 +45,8 @@ data:
       dataset_configs:
         - _target_: data.datasets.co3d.Co3dDataset
           split: test
-          CO3D_DIR: /data/vggt_kimi_files/VGGT-Dataset
-          CO3D_ANNOTATION_DIR: /root/co3d_annotations
+          CO3D_DIR: ${oc.env:VGGT_CO3D_DIR,./data}
+          CO3D_ANNOTATION_DIR: ${oc.env:VGGT_CO3D_ANNOTATION_DIR,./data/co3d_annotations}
 
 
 logging:

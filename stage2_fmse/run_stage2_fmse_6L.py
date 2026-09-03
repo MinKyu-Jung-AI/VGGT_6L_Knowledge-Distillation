@@ -13,17 +13,29 @@ import torch.nn as nn
 from pathlib import Path
 from collections import deque
 
-VGGT_ROOT = str((Path(__file__).resolve().parent.parent / 'vggt-fresh' / 'vggt-main'))
+REPO_ROOT = Path(__file__).resolve().parent.parent
+VGGT_ROOT = str(REPO_ROOT / 'vggt-fresh' / 'vggt-main')
+sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, VGGT_ROOT)
 sys.path.insert(0, os.path.join(VGGT_ROOT, 'training'))
 
 from vggt.models.vggt import VGGT
 from fla.layers import GatedLinearAttention
+from project_paths import (
+    BLENDED_MVS_DIR,
+    CO3D_ANNOTATION_DIR,
+    CO3D_DIR,
+    DL3DV_DIR,
+    LOG_ROOT,
+    MEGADEPTH_DIR,
+    PRETRAIN_PATH,
+    STAGE1_CHECKPOINT_DIR,
+    STAGE2_CHECKPOINT_DIR,
+)
 
-PRETRAIN_PATH = '/root/.cache/torch/hub/checkpoints/model.pt'
-STAGE1_DIR = Path('/root/halo_checkpoints_6L_layerwise')
-SAVE_DIR = Path('/root/halo_checkpoints_6L_stage2')
-LOG_PATH = Path('/root/halo_logs/6L_stage2.log')
+STAGE1_DIR = STAGE1_CHECKPOINT_DIR
+SAVE_DIR = STAGE2_CHECKPOINT_DIR
+LOG_PATH = LOG_ROOT / '6L_stage2.log'
 
 SIX_IDX = [2, 5, 7, 9, 18, 20]
 DISTILL_IDX = [2, 4, 5, 7, 9, 11, 12, 14, 17, 18, 20, 23]
@@ -82,25 +94,25 @@ def setup_data():
     })
     datasets = [
         Co3dDataset(conf, split='train', len_train=200000,
-            CO3D_DIR='/data/vggt_kimi_files/VGGT-Dataset',
-            CO3D_ANNOTATION_DIR='/root/co3d_annotations', min_num_images=S),
+            CO3D_DIR=str(CO3D_DIR),
+            CO3D_ANNOTATION_DIR=str(CO3D_ANNOTATION_DIR), min_num_images=S),
     ]
     try:
         from data.datasets.dl3dv import DL3DVDataset
         datasets.append(DL3DVDataset(conf, split='train', len_train=100000,
-            DL3DV_DIR='/data/vggt_kimi_files/VGGT-Dataset/DL3DV-10K',
+            DL3DV_DIR=str(DL3DV_DIR),
             resolutions=['1K', '2K', '3K'], min_num_images=S))
     except: pass
     try:
         from data.datasets.blendedmvs import BlendedMVSDataset
         datasets.append(BlendedMVSDataset(conf, split='train', len_train=50000,
-            BLENDED_MVS_DIR='/data/vggt_kimi_files/VGGT-Dataset/blendedmvs/BlendedMVS_plusplus',
+            BLENDED_MVS_DIR=str(BLENDED_MVS_DIR),
             min_num_images=S))
     except: pass
     try:
         from data.datasets.megadepth import MegaDepthDataset
         datasets.append(MegaDepthDataset(conf, split='train', len_train=50000,
-            MEGADEPTH_DIR='/data/vggt_kimi_files/VGGT-Dataset/megadepth',
+            MEGADEPTH_DIR=str(MEGADEPTH_DIR),
             min_num_images=S))
     except: pass
     log.info(f'데이터셋: {len(datasets)}개')

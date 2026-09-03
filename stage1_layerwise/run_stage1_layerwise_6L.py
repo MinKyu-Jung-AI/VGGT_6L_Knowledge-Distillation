@@ -11,16 +11,24 @@ import numpy as np
 import torch.nn as nn
 from pathlib import Path
 
-VGGT_ROOT = str((Path(__file__).resolve().parent.parent / 'vggt-fresh' / 'vggt-main'))
+REPO_ROOT = Path(__file__).resolve().parent.parent
+VGGT_ROOT = str(REPO_ROOT / 'vggt-fresh' / 'vggt-main')
+sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, VGGT_ROOT)
 sys.path.insert(0, os.path.join(VGGT_ROOT, 'training'))
 
 from vggt.models.vggt import VGGT
 from fla.layers import GatedLinearAttention
+from project_paths import (
+    CO3D_ANNOTATION_DIR,
+    CO3D_DIR,
+    LOG_ROOT,
+    PRETRAIN_PATH,
+    STAGE1_CHECKPOINT_DIR,
+)
 
-PRETRAIN_PATH = '/root/.cache/torch/hub/checkpoints/model.pt'
-SAVE_DIR = Path('/root/halo_checkpoints_6L_layerwise')
-LOG_PATH = Path('/root/halo_logs/6L_layerwise.log')
+SAVE_DIR = STAGE1_CHECKPOINT_DIR
+LOG_PATH = LOG_ROOT / '6L_layerwise.log'
 
 SIX_IDX = [2, 5, 7, 9, 18, 20]
 # 학습 순서: 안쪽(얕은 층)부터 바깥쪽으로 진행 — cascade 오차 누적을 줄이기 위함
@@ -76,8 +84,8 @@ def setup_data(S=8, B=8):
                  'gray_scale': True, 'gau_blur': False}
     })
     ds = Co3dDataset(conf, split='train', len_train=200000,
-        CO3D_DIR='/data/vggt_kimi_files/VGGT-Dataset',
-        CO3D_ANNOTATION_DIR='/root/co3d_annotations', min_num_images=S)
+        CO3D_DIR=str(CO3D_DIR),
+        CO3D_ANNOTATION_DIR=str(CO3D_ANNOTATION_DIR), min_num_images=S)
     IMG_H, IMG_W = 518, 518
     def sample_batch(device):
         imgs = []

@@ -10,17 +10,27 @@ import torch.nn as nn
 from pathlib import Path
 from collections import deque
 
-VGGT_ROOT = str((Path(__file__).resolve().parent.parent / 'vggt-fresh' / 'vggt-main'))
+REPO_ROOT = Path(__file__).resolve().parent.parent
+VGGT_ROOT = str(REPO_ROOT / 'vggt-fresh' / 'vggt-main')
+sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, VGGT_ROOT)
 sys.path.insert(0, os.path.join(VGGT_ROOT, 'training'))
 
 from vggt.models.vggt import VGGT
 from vggt.utils.pose_enc import pose_encoding_to_extri_intri, extri_intri_to_pose_encoding
 from fla.layers import GatedLinearAttention
+from project_paths import (
+    CO3D_ANNOTATION_DIR,
+    CO3D_DIR,
+    DL3DV_DIR,
+    FINAL_CHECKPOINT_PATH,
+    LOG_ROOT,
+    PRETRAIN_PATH,
+    TASK_ONLY_CHECKPOINT_DIR,
+)
 
-PRETRAIN_PATH = '/root/.cache/torch/hub/checkpoints/model.pt'
-SAVE_DIR = Path('/root/halo_checkpoints_6L_taskonly')
-LOG_PATH = Path('/root/halo_logs/6L_task_only.log')
+SAVE_DIR = TASK_ONLY_CHECKPOINT_DIR
+LOG_PATH = LOG_ROOT / '6L_task_only.log'
 
 SIX_IDX = [2, 5, 7, 9, 18, 20]
 
@@ -68,13 +78,13 @@ def setup_data():
     })
     datasets = [
         Co3dDataset(conf, split='train', len_train=200000,
-            CO3D_DIR='/data/vggt_kimi_files/VGGT-Dataset',
-            CO3D_ANNOTATION_DIR='/root/co3d_annotations', min_num_images=S),
+            CO3D_DIR=str(CO3D_DIR),
+            CO3D_ANNOTATION_DIR=str(CO3D_ANNOTATION_DIR), min_num_images=S),
     ]
     try:
         from data.datasets.dl3dv import DL3DVDataset
         datasets.append(DL3DVDataset(conf, split='train', len_train=100000,
-            DL3DV_DIR='/data/vggt_kimi_files/VGGT-Dataset/DL3DV-10K',
+            DL3DV_DIR=str(DL3DV_DIR),
             resolutions=['1K', '2K', '3K'], min_num_images=S))
     except: pass
     ds_weights = [1.0] * len(datasets)
@@ -127,7 +137,7 @@ def main():
         student.aggregator.global_blocks[idx] = wrapped
 
     # 0.641 체크포인트 로드
-    ckpt = torch.load(str(Path(__file__).resolve().parent.parent / 'weights' / '6L_best_AUC0641.pt'), map_location='cpu', weights_only=False)
+    ckpt = torch.load(FINAL_CHECKPOINT_PATH, map_location='cpu', weights_only=False)
     model_sd = student.state_dict()
     for k, v in ckpt['model'].items():
         if k in model_sd and v.shape == model_sd[k].shape: model_sd[k] = v

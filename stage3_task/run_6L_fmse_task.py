@@ -10,17 +10,27 @@ import torch.nn as nn
 from pathlib import Path
 from collections import deque
 
-VGGT_ROOT = str((Path(__file__).resolve().parent.parent / 'vggt-fresh' / 'vggt-main'))
+REPO_ROOT = Path(__file__).resolve().parent.parent
+VGGT_ROOT = str(REPO_ROOT / 'vggt-fresh' / 'vggt-main')
+sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, VGGT_ROOT)
 sys.path.insert(0, os.path.join(VGGT_ROOT, 'training'))
 
 from vggt.models.vggt import VGGT
 from vggt.utils.pose_enc import pose_encoding_to_extri_intri, extri_intri_to_pose_encoding
 from fla.layers import GatedLinearAttention
+from project_paths import (
+    CO3D_ANNOTATION_DIR,
+    CO3D_DIR,
+    DL3DV_DIR,
+    LOG_ROOT,
+    PRETRAIN_PATH,
+    STAGE3_CHECKPOINT_DIR,
+    STAGE3_WARM_START,
+)
 
-PRETRAIN_PATH = '/root/.cache/torch/hub/checkpoints/model.pt'
-SAVE_DIR = Path('/root/halo_checkpoints_6L_task')
-LOG_PATH = Path('/root/halo_logs/6L_fmse_task.log')
+SAVE_DIR = STAGE3_CHECKPOINT_DIR
+LOG_PATH = LOG_ROOT / '6L_fmse_task.log'
 
 SIX_IDX = [2, 5, 7, 9, 18, 20]
 DISTILL_IDX = [2, 4, 5, 7, 9, 11, 12, 14, 17, 18, 20, 23]
@@ -83,13 +93,13 @@ def setup_data():
     })
     datasets = [
         Co3dDataset(conf, split='train', len_train=200000,
-            CO3D_DIR='/data/vggt_kimi_files/VGGT-Dataset',
-            CO3D_ANNOTATION_DIR='/root/co3d_annotations', min_num_images=S),
+            CO3D_DIR=str(CO3D_DIR),
+            CO3D_ANNOTATION_DIR=str(CO3D_ANNOTATION_DIR), min_num_images=S),
     ]
     try:
         from data.datasets.dl3dv import DL3DVDataset
         datasets.append(DL3DVDataset(conf, split='train', len_train=100000,
-            DL3DV_DIR='/data/vggt_kimi_files/VGGT-Dataset/DL3DV-10K',
+            DL3DV_DIR=str(DL3DV_DIR),
             resolutions=['1K', '2K', '3K'], min_num_images=S))
     except: pass
     ds_weights = [1.0] * len(datasets)
@@ -142,7 +152,7 @@ def main():
         student.aggregator.global_blocks[idx] = wrapped
 
     # Step 1050 체크포인트에서 warm start
-    ckpt = torch.load('/root/halo_checkpoints_lightning_fmse/checkpoint.pt', map_location='cpu', weights_only=False)
+    ckpt = torch.load(STAGE3_WARM_START, map_location='cpu', weights_only=False)
     model_sd = student.state_dict()
     loaded = 0
     for k, v in ckpt['model'].items():

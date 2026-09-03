@@ -3,12 +3,16 @@ import os.path as osp
 import logging
 import random
 import glob
+from pathlib import Path
 
 import cv2
 import numpy as np
 
 from data.dataset_util import *
 from data.base_dataset import BaseDataset
+
+
+_REPO_ROOT = Path(__file__).resolve().parents[5]
 
 
 class ScanNetDataset(BaseDataset):
@@ -27,7 +31,9 @@ class ScanNetDataset(BaseDataset):
         self,
         common_conf,
         split: str = "train",
-        SCANNET_DIR: str = "/data/vggt_kimi_files/VGGT-Dataset/scannet/extracted",
+        SCANNET_DIR: str = os.getenv(
+            "VGGT_SCANNET_DIR", str(_REPO_ROOT / "data" / "scannet" / "extracted")
+        ),
         min_num_images: int = 8,
         len_train: int = 100000,
         len_test: int = 5000,

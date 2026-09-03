@@ -14,6 +14,7 @@ from vggt.utils.load_fn import load_and_preprocess_images
 from vggt.utils.pose_enc import pose_encoding_to_extri_intri
 from fla.layers import GatedLinearAttention
 import torch.nn as nn
+from project_paths import FINAL_CHECKPOINT_PATH, PRETRAIN_PATH, VISER_IMAGE_DIR
 
 device = "cuda"; dtype = torch.bfloat16
 
@@ -27,7 +28,7 @@ class FLABlock(nn.Module):
         x=x+self.ls1(o);x=x+self.ls2(self.mlp(self.norm2(x)));return x
 
 print("Loading 6L (AUC=0.641)...")
-pretrained = torch.load('/root/.cache/torch/hub/checkpoints/model.pt', map_location='cpu', weights_only=False)
+pretrained = torch.load(PRETRAIN_PATH, map_location='cpu', weights_only=False)
 model = VGGT(img_size=518, patch_size=14, embed_dim=1024,
     enable_camera=True, enable_depth=True, enable_point=True, enable_track=False).to(device)
 model.load_state_dict(pretrained, strict=False)
@@ -38,7 +39,7 @@ for idx in [2, 5, 7, 9, 18, 20]:
     wrapped = FLABlock(model.aggregator.global_blocks[idx], gla).to(device)
     model.aggregator.global_blocks[idx] = wrapped
 
-ckpt = torch.load(str(HERE / 'weights' / '6L_best_AUC0641.pt'), map_location='cpu', weights_only=False)
+ckpt = torch.load(FINAL_CHECKPOINT_PATH, map_location='cpu', weights_only=False)
 model_sd = model.state_dict()
 for k, v in ckpt['model'].items():
     if k in model_sd and v.shape == model_sd[k].shape:
@@ -47,7 +48,7 @@ model.load_state_dict(model_sd, strict=False)
 model.eval()
 print("Model loaded.")
 
-image_names = sorted(glob.glob(os.path.join(VGGT_ROOT, 'examples/kitchen/images/*.png')))
+image_names = sorted(glob.glob(str(VISER_IMAGE_DIR / '*.png')))
 print(f"{len(image_names)} images")
 images = load_and_preprocess_images(image_names).to(device)
 

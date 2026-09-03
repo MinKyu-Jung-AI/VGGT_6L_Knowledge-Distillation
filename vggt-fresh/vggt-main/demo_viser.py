@@ -9,6 +9,7 @@ import glob
 import time
 import threading
 import argparse
+from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
@@ -352,8 +353,14 @@ def main():
                  enable_point=True, enable_track=False,
                  **MAMBA_CFG)
 
-    _halo_path     = '/root/halo_checkpoints/stage1_final_step4000.pt'
-    _pretrain_path = '/root/.cache/torch/hub/checkpoints/model.pt'
+    _repo_root = Path(__file__).resolve().parents[2]
+    _halo_path = Path(os.getenv(
+        'VGGT_HALO_CHECKPOINT',
+        str(_repo_root / 'outputs' / 'checkpoints' / 'halo' / 'stage1_final_step4000.pt'),
+    ))
+    _pretrain_path = Path(os.getenv(
+        'VGGT_PRETRAIN_PATH', str(_repo_root / 'weights' / 'model.pt')
+    ))
     _halo_state    = torch.load(_halo_path, map_location='cpu', weights_only=False)
     _halo_state    = _halo_state['model'] if 'model' in _halo_state else _halo_state
     _pretrained    = torch.load(_pretrain_path, map_location='cpu', weights_only=False)

@@ -30,14 +30,14 @@ data:
       dataset_configs:
         - _target_: data.datasets.co3d.Co3dDataset
           split: train
-          CO3D_DIR: /data/vggt_kimi_files/VGGT-Dataset
-          CO3D_ANNOTATION_DIR: /root/co3d_annotations
+          CO3D_DIR: ${oc.env:VGGT_CO3D_DIR,./data}
+          CO3D_ANNOTATION_DIR: ${oc.env:VGGT_CO3D_ANNOTATION_DIR,./data/co3d_annotations}
           min_num_images: 8
           len_train: 200000
         - _target_: data.datasets.co3d.Co3dDataset
           split: train
-          CO3D_DIR: /data/vggt_kimi_files/VGGT-Dataset/DL3DV-10K
-          CO3D_ANNOTATION_DIR: /root/co3d_annotations
+          CO3D_DIR: ${oc.env:VGGT_DL3DV_DIR,./data/DL3DV-10K}
+          CO3D_ANNOTATION_DIR: ${oc.env:VGGT_CO3D_ANNOTATION_DIR,./data/co3d_annotations}
           min_num_images: 8
           len_train: 100000
   val:
@@ -56,20 +56,20 @@ data:
       dataset_configs:
         - _target_: data.datasets.co3d.Co3dDataset
           split: test
-          CO3D_DIR: /data/vggt_kimi_files/VGGT-Dataset
-          CO3D_ANNOTATION_DIR: /root/co3d_annotations
+          CO3D_DIR: ${oc.env:VGGT_CO3D_DIR,./data}
+          CO3D_ANNOTATION_DIR: ${oc.env:VGGT_CO3D_ANNOTATION_DIR,./data/co3d_annotations}
           min_num_images: 8
           len_test: 10000
 
 checkpoint:
-  save_dir: /root/vggt_paper_hybrid_checkpoints
-  resume_checkpoint_path: /root/vggt_hybrid_stage1_checkpoints/checkpoint.pt
+  save_dir: ${oc.env:VGGT_STAGE2_CHECKPOINT_DIR,./outputs/checkpoints/stage2_fmse}
+  resume_checkpoint_path: ${oc.env:VGGT_STAGE1_RESUME_CHECKPOINT,./outputs/checkpoints/stage1_layerwise/checkpoint.pt}
   save_freq: 1
   save_freq_steps: 5000
   strict: false
 
 logging:
-  log_dir: /root/vggt_paper_hybrid_logs
+  log_dir: ${oc.env:VGGT_STAGE2_LOG_DIR,./outputs/logs/hybrid_multidata}
   log_freq: 10
 
 model:
